@@ -91,6 +91,18 @@ package ru.valyard.osc.tuio.connection
 		//
 		//--------------------------------------------------------------------------
 		
+		private var _movementThreshold:Number = 0;
+		private var _movementThresholdSq:Number = 0;
+		
+		public function get movementThreshold():Number {
+			return _movementThreshold;
+		}
+		
+		public function set movementThreshold(value:Number):void {
+			_movementThreshold = value;
+			_movementThresholdSq = value * value;
+		}
+		
 		/**
 		 * @private
 		 */
@@ -242,8 +254,19 @@ package ru.valyard.osc.tuio.connection
 						
 						var cursor:TUIOCursor = this._cursorsHASH[s];
 						if ( cursor ) {
-							cursor.update(x, y, z, X, Y, Z, m, this._frame);
-							this.dispatchUpdateCursor(cursor);
+							var updated:Boolean = false;
+							var delta:Number = cursor.x - x;
+							if (delta*delta >= _movementThresholdSq) {
+								updated = true;
+							} else {
+								delta = cursor.y - y;
+								if (delta*delta >= _movementThresholdSq) updated = true;
+							}
+							
+							if (updated) {
+								cursor.update(x, y, z, X, Y, Z, m, this._frame);
+								this.dispatchUpdateCursor(cursor);
+							}
 						} else {
 							cursor = new TUIOCursor(type, s, x, y, z, X, Y, Z, m, this._frame);
 							this._cursorsHASH[s] = cursor;
@@ -288,8 +311,20 @@ package ru.valyard.osc.tuio.connection
 						
 						var object:TUIOObject = this._objectsHASH[s];
 						if ( object ) {
-							object.update(x, y, z, a, b, c, X, Y, Z, A, B, C, m, r, this._frame);
-							this.dispatchUpdateObject(object);
+							updated = false;
+							delta = object.x - x;
+							if (delta*delta >= _movementThresholdSq) {
+								updated = true;
+							} else {
+								delta = object.y - y;
+								if (delta*delta >= _movementThresholdSq) updated = true;
+							}
+							
+							if (updated) {
+								// WRONG! Need to check other parameters.
+								object.update(x, y, z, a, b, c, X, Y, Z, A, B, C, m, r, this._frame);
+								this.dispatchUpdateObject(object);
+							}
 						} else {
 							object = new TUIOObject(type, s, id, x, y, z, a, b, c, X, Y, Z, A, B, C, m, r, this._frame);
 							this._objectsHASH[s] = object;
@@ -344,8 +379,20 @@ package ru.valyard.osc.tuio.connection
 						
 						var blob:TUIOBlob = this._blobsHASH[s];
 						if ( blob ) {
-							blob.update(x, y, z, a, b, c, w, h, d, f, v, X, Y, Z, A, B, C, m, r, this._frame);
-							this.dispatchUpdateBlob(blob);
+							updated = false;
+							delta = blob.x - x;
+							if (delta*delta >= _movementThresholdSq) {
+								updated = true;
+							} else {
+								delta = blob.y - y;
+								if (delta*delta >= _movementThresholdSq) updated = true;
+							}
+							
+							if (updated) {
+								// WRONG! Need to check other parameters.
+								blob.update(x, y, z, a, b, c, w, h, d, f, v, X, Y, Z, A, B, C, m, r, this._frame);
+								this.dispatchUpdateBlob(blob);
+							}
 						} else {
 							blob = new TUIOBlob(type, s, x, y, z, a, b, c, w, h, d, f, v, X, Y, Z, A, B, C, m, r, this._frame);
 							this._blobsHASH[s] = blob;
